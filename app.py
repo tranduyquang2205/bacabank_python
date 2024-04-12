@@ -5,6 +5,9 @@ from bab import BacABank
 
 
 app = FastAPI()
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
 bacabank = BacABank()
 class LoginDetails(BaseModel):
     username: str
