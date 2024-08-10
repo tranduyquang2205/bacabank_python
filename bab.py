@@ -259,7 +259,7 @@ class BacABank:
             return {'code':200,'success': True, 'message': 'Thành công',
                                 'data':{
                                     'account_number':self.account_number,
-                                    'balance':self.account_number
+                                    'balance':int(balance)
                         }}
         return {'code':520 ,'success': False, 'message': 'Unknown Error!'} 
 
