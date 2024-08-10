@@ -197,13 +197,13 @@ class BacABank:
                 if 'Tài khoản truy cập của Quý khách bị khóa' in check_error_message:
                     return {
                         'success': False,
-                        'code': '449',
+                        'code': 449,
                         'message': check_error_message
                     }
                 if 'Tên truy cập hoặc mật khẩu của bạn không chính xác!' in check_error_message:
                     return {
                         'success': False,
-                        'code': '444',
+                        'code': 444,
                         'message': check_error_message
                     }
                 return {
