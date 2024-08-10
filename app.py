@@ -10,7 +10,7 @@ app = FastAPI()
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
-bacabank = BacABank()
+
 class LoginDetails(BaseModel):
     username: str
     password: str
@@ -18,6 +18,7 @@ class LoginDetails(BaseModel):
 @app.post('/login', tags=["login"])
 def login_api(input: LoginDetails):
     try:
+        bacabank = BacABank(input.username, input.password,input.account_number)
         session_raw = bacabank.login(input.username, input.password)
         return APIResponse.json_format(session_raw)
     except Exception as e:
@@ -28,6 +29,7 @@ def login_api(input: LoginDetails):
 @app.post('/get_balance', tags=["get_balance"])
 def get_balance_api(input: LoginDetails):
     try:
+        bacabank = BacABank(input.username, input.password,input.account_number)
         session_raw = bacabank.login(input.username, input.password)
         balance = bacabank.get_balance()
         return APIResponse.json_format(balance)
@@ -47,6 +49,7 @@ class Transactions(BaseModel):
 @app.post('/get_transactions', tags=["get_transactions"])
 def get_transactions_api(input: Transactions):
     try:
+        bacabank = BacABank(input.username, input.password,input.account_number)
         session_raw = bacabank.login(input.username, input.password)
         history = bacabank.get_transactions(input.from_date,input.to_date,input.limit)
         return APIResponse.json_format(history)
