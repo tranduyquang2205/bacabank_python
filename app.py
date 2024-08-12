@@ -30,7 +30,6 @@ def login_api(input: LoginDetails):
 def get_balance_api(input: LoginDetails):
     try:
         bacabank = BacABank(input.username, input.password,input.account_number)
-        session_raw = bacabank.login()
         balance = bacabank.get_balance()
         return APIResponse.json_format(balance)
     except Exception as e:
@@ -50,7 +49,6 @@ class Transactions(BaseModel):
 def get_transactions_api(input: Transactions):
     try:
         bacabank = BacABank(input.username, input.password,input.account_number)
-        session_raw = bacabank.login()
         history = bacabank.get_transactions(input.from_date,input.to_date,input.limit)
         return APIResponse.json_format(history)
     except Exception as e:

@@ -7,9 +7,12 @@ import base64
 import re
 import urllib.parse
 from bs4 import BeautifulSoup
-
+import os
 class BacABank:
     def __init__(self,username, password, account_number):
+        self.is_login = False
+        self.time_login = time.time()
+        self.file = f"data/{username}.txt"
         self.username = username
         self.password = password
         self.account_number = account_number
@@ -22,6 +25,17 @@ class BacABank:
         self.dse_processorId=''
         self.check_balance = False
         self.transactions = []
+        if not os.path.exists(self.file):
+            self.username = username
+            self.password = password
+            self.account_number = account_number
+            self.save_data()
+            
+        else:
+            self.parse_data()
+            self.username = username
+            self.password = password
+            self.account_number = account_number
     def check_error_message(self,html_content):
         pattern = r'<span style="color: black"><strong>(.*?)</strong></span>'
         match = re.search(pattern, html_content)
@@ -74,7 +88,27 @@ class BacABank:
                 history_records.append(record)
 
             return history_records
+    def save_data(self):
+        data = {
+            'username': self.username,
+            'password': self.password,
+            'account_number': self.account_number,
+            'time_login': self.time_login,
+            'is_login': self.is_login,
+        }
+        with open(self.file, 'w') as f:
+            json.dump(data, f)
+
+    def parse_data(self):
+        with open(self.file, 'r') as f:
+            data = json.load(f)
+        self.username = data.get('username', '')
+        self.password = data.get('password', '')
+        self.account_number = data.get('account_number', '')
+        self.time_login = data.get("time_login", "")
+        self.is_login = data.get("is_login", "")
     def login(self):
+        self.session = requests.Session()
         url = "https://ebanking.baca-bank.vn/IBSRetail/Request?&dse_sessionId=s2xe-FimkVx4j9lPeztr8eF&dse_applicationId=-1&dse_pageId=1&dse_operationName=retailIndexProc&dse_errorPage=error_page.jsp&dse_processorState=initial&dse_nextEventName=start"
 
         payload = {}
@@ -222,6 +256,9 @@ class BacABank:
                     'success': False,
                     'message': 'Unknow error!',
                     }
+                self.is_login = True
+                self.time_login = time.time()
+                self.save_data()
                 return {
                     'success': True,
                     'code': 200,
@@ -230,6 +267,10 @@ class BacABank:
                 }
 
     def get_balance(self):
+        if not self.is_login or time.time() - self.time_login > 20:
+            login = self.login()
+            if not login['success']:
+                return login
         if not self.account_url:
             login = self.login()
             if 'success' not in login or not login['success']:
@@ -253,7 +294,8 @@ class BacABank:
         # with open("balance.html", "w", encoding="utf-8") as file:
         #     file.write(response.text)
         self.dse_processorId = self.extract_dse_processorId(response.text)
-        balance =  self.extract_balance(response.text).replace(',','')
+        balance =  self.extract_balance(response.text)
+        balance = balance.replace(',','') if balance else None
         self.check_balance = True
         if balance:
             return {'code':200,'success': True, 'message': 'Thành công',
@@ -261,6 +303,8 @@ class BacABank:
                                     'account_number':self.account_number,
                                     'balance':int(balance)
                         }}
+        self.is_login = False
+        self.save_data()
         return {'code':520 ,'success': False, 'message': 'Unknown Error!'} 
 
     def createTaskCaptcha(self, base64_img):
@@ -362,6 +406,8 @@ class BacABank:
                                 'transactions':self.transactions,
                     }}
         else:
+            self.is_login = False
+            self.save_data()
             return  {
                     "success": False,
                     "code": 503,
