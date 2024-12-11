@@ -25,7 +25,7 @@ class BacABank:
         self.dse_processorId=''
         self.check_balance = False
         self.transactions = []
-        if not os.path.exists(self.file):
+        if not os.path.exists(self.file) or os.path.getsize(self.file) == 0:
             self.username = username
             self.password = password
             self.account_number = account_number
